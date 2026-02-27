@@ -26,5 +26,11 @@ urlpatterns = [
         "shares/<uuid:file_id>/to/<uuid:user_id>/",
         ShareFileCreateView.as_view(),
         name="share-files"
-    )
+    ),
+    path(
+        "unshare/<uuid:file_share_id>",
+        UnshareFileDeleteView.as_view(),
+        name="unshare"
+    ),
+
 ]

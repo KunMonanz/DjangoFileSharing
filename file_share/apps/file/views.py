@@ -111,3 +111,17 @@ class SharedFilesListView(generics.ListAPIView):
             .prefetch_related("shares")
             .distinct()
         )
+
+
+class UnshareFileDeleteView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+    lookup_url_kwarg = 'file_share_id'
+    queryset = FileShare.objects.all()
+
+    def get_object(self) -> FileShare:  # type: ignore
+        obj: FileShare = super().get_object()
+        if obj.shared_by != self.request.user:
+            raise exceptions.PermissionDenied(
+                "You are not authorized to unshare this file.")
+        return obj
