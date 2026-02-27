@@ -98,6 +98,9 @@ class RetrieveUpdateDestroyFileView(
             # Only owner can update/delete
             return File.objects.filter(owner=self.request.user).select_related("owner")
 
+    def perform_destroy(self, instance: File):
+        instance.shares.all().delete()
+        instance.delete()
 
 class SharedFilesListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
