@@ -133,6 +133,7 @@ class FileShareSerializer(serializers.ModelSerializer):
             'shared_by',
             'shared_to',
             'file',
-            'shared_at'
+            'shared_at',
+            'comment'
         ]
         read_only_fields = ['id', 'shared_by', 'shared_at']

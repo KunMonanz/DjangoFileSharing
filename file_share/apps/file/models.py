@@ -11,7 +11,6 @@ class File(models.Model):
         on_delete=models.CASCADE,
         related_name="files"
     )
-
     name = models.CharField(max_length=256, blank=True)
     file = models.FileField(upload_to="files/")
     content_type = models.CharField(max_length=20, blank=False)
@@ -53,6 +52,7 @@ class FileShare(models.Model):
     )
 
     shared_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(blank=True)
 
     class Meta:
         unique_together = ("file", "shared_to")
