@@ -55,3 +55,4 @@ class MiniUserSerializer(serializers.ModelSerializer):
             "id",
             "username",
         ]
+
