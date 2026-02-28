@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 
@@ -99,7 +100,7 @@ class RetrieveUpdateDestroyFileView(
             return File.objects.filter(owner=self.request.user).select_related("owner")
 
     def perform_destroy(self, instance: File):
-        instance.shares.all().delete()
+        instance.shares.all().delete()  # type: ignore
         instance.delete()
 
 class SharedFilesListView(generics.ListAPIView):
@@ -128,3 +129,29 @@ class UnshareFileDeleteView(generics.DestroyAPIView):
             raise exceptions.PermissionDenied(
                 "You are not authorized to unshare this file.")
         return obj
+
+
+class DownloadFileView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "file_id"
+
+    def get_queryset(self):
+        return (
+            File.objects
+            .select_related("owner")
+            .filter(
+                Q(owner=self.request.user) |
+                Q(shares__shared_to=self.request.user)
+            )
+            .distinct()
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        file_obj = self.get_object()
+
+        return FileResponse(
+            file_obj.file.open("rb"),
+            as_attachment=True,
+            filename=file_obj.file.name.split("/")[-1]
+        )

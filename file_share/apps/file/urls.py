@@ -8,6 +8,11 @@ urlpatterns = [
         name="upload-file"
     ),
     path(
+        "download/<uuid:fie_id>/",
+        DownloadFileView.as_view(),
+        name="download-file"
+    ),
+    path(
         "",
         FileListView.as_view(),
         name="files-list"
