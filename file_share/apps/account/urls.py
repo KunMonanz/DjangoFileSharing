@@ -35,7 +35,12 @@ urlpatterns = [
     ),
     path(
         'friends/requests/',
-        GetAllFriendRequests.as_view(),
+        GetAllRecievedFriendRequests.as_view(),
         name="get-all-friend-requests"
+    ),
+    path(
+        'friends/sent-requests/',
+        GetAllSentFriendRequests.as_view(),
+        name='get-all-sent-friend-requests'
     )
 ]

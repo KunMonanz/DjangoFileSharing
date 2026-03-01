@@ -132,7 +132,7 @@ class AcceptFriendRequest(generics.UpdateAPIView):
         reciever = friend_request.reciever
 
         if reciever != user:
-            return exceptions.PermissionDenied(
+            raise exceptions.PermissionDenied(
                 "You are unauthorized!"
             )
 
@@ -165,18 +165,37 @@ class AcceptFriendRequest(generics.UpdateAPIView):
         )
 
 
-class GetAllFriendRequests(generics.ListAPIView):
+class GetAllRecievedFriendRequests(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FriendRequestsSerializer
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore
         user = self.request.user
+
+        queryset = FriendshipRelationship.objects\
+            .select_related('reciever', 'sender')\
+            .filter(reciever=user)
+
+        pending = self.request.query_params.get('pending')  # type: ignore
+        if pending == 'true':
+            queryset = queryset.filter(is_accepted=False)
+
+        return queryset.order_by('-created')
+
+
+class GetAllSentFriendRequests(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FriendRequestsSerializer
+
+    def get_queryset(self):  # type: ignore
+        user = self.request.user
+
         queryset = FriendshipRelationship.objects\
             .select_related('reciever', 'sender')\
             .filter(sender=user)
 
-        unaccepted_only = self.request.query_params.get('is_accepted')
-        if unaccepted_only == 'true':
-            queryset.filter(is_accepted=False)
+        pending = self.request.query_params.get('pending')
+        if pending == 'true':
+            queryset = queryset.filter(is_accepted=False)
 
-        return queryset
+        return queryset.order_by('-created')
