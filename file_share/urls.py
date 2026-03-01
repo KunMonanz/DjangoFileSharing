@@ -44,5 +44,9 @@ urlpatterns = [
     path(
         'api/files/',
         include('file_share.apps.file.urls')
-    )
+    ),
+    path(
+        'api/notifications/',
+        include('file_share.apps.notification.urls')
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

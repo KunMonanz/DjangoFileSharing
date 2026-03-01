@@ -1,7 +1,10 @@
 from django.contrib.auth.password_validation import validate_password
-from file_share.apps.account.models import User
 from rest_framework import serializers
+
 from .models import User
+
+from file_share.apps.notification.factory import NotificationFactory
+from file_share.apps.notification.models import Notification
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -44,6 +47,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+
+        notification_factory = NotificationFactory()
+        notification_factory.create_notification(
+            recipient=user,
+            message_type=Notification.NotificationType.USER_REGISTRATION
+        )
         return user
 
 

@@ -5,6 +5,9 @@ from rest_framework import exceptions, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from file_share.apps.notification.factory import NotificationFactory
+from file_share.apps.notification.models import Notification
+
 from .models import FriendshipRelationship
 
 from .serializers import (
@@ -48,6 +51,21 @@ class SendFriendRequest(generics.CreateAPIView):
         )
 
         if friendship_created:
+
+            notification_factory = NotificationFactory()
+
+            notification_factory.create_notification(
+                recipient=user,
+                message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_SENT,
+                activator=reciever
+            )
+
+            notification_factory.create_notification(
+                recipient=reciever,
+                message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED,
+                activator=user
+            )
+
             return Response(
                 {
                     "message": "Friend request send successfully"
@@ -120,6 +138,13 @@ class AcceptFriendRequest(generics.UpdateAPIView):
 
         friend_request.is_accepted = True
         friend_request.save()
+
+        notification_factory = NotificationFactory()
+        notification_factory.create_notification(
+            recipient=reciever,
+            message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED,
+            activator=user
+        )
 
         reciever.friends.add(sender)
 

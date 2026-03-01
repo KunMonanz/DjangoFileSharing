@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     # Local apps
     'file_share.apps.account',
     'file_share.apps.file',
+    'file_share.apps.notification',
 ]
 
 MIDDLEWARE = [
