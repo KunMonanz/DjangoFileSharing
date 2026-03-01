@@ -50,6 +50,13 @@ class SendFriendRequest(generics.CreateAPIView):
             reciever=reciever
         )
 
+        if reciever == user:
+            return Response({
+                "error": "Cannot send a friend request to yourself"
+            },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         if friendship_created:
 
             notification_factory = NotificationFactory()
