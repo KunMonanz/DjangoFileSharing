@@ -45,15 +45,22 @@ class ShareFileCreateView(generics.CreateAPIView):
     serializer_class = FileShareSerializer
 
     def perform_create(self, serializer):
+        user = self.request.user
+
         file_id = self.kwargs.get('file_id')
         shared_to_id = self.kwargs.get('user_id')
 
         file = get_object_or_404(File, id=file_id)
         shared_to_user = get_object_or_404(User, id=shared_to_id)
 
-        if file.owner != self.request.user:
-            raise ValidationError(
-                "You cannot share this file."
+        if file.owner != user:
+            raise exceptions.PermissionDenied(
+                "You are not permitted to share this file"
+            )
+
+        if not user.friends.filter(id=shared_to_user).exists():
+            raise exceptions.PermissionDenied(
+                "You are not permitted to share this file"
             )
 
         serializer.save(
@@ -103,6 +110,7 @@ class RetrieveUpdateDestroyFileView(
         instance.shares.all().delete()  # type: ignore
         instance.delete()
 
+
 class SharedFilesListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FileSerializer
@@ -127,7 +135,8 @@ class UnshareFileDeleteView(generics.DestroyAPIView):
         obj: FileShare = super().get_object()
         if obj.shared_by != self.request.user:
             raise exceptions.PermissionDenied(
-                "You are not authorized to unshare this file.")
+                "You are not authorized to unshare this file."
+            )
         return obj
 
 

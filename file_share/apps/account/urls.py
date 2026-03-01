@@ -11,6 +11,8 @@ urlpatterns = [
         MyTokenObtainPairView.as_view(),
         name='token_obtain_pair'
     ),
+
+    # Friendship relation handling
     path(
         'friends/',
         GetAllFriendsView.as_view(),

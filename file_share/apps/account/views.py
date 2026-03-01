@@ -84,7 +84,8 @@ class RemoveFriendRequest(generics.DestroyAPIView):
             return Response(
                 {
                     "message": "Friendship request deleted successfully"
-                }
+                },
+                status=status.HTTP_200_OK
             )
 
 
@@ -109,11 +110,22 @@ class AcceptFriendRequest(generics.UpdateAPIView):
                 "You are unauthorized!"
             )
 
+        if friend_request.is_accepted == True:
+            return Response(
+                {
+                    "error": "Friendship request has already been accepted"
+                },
+                status=status.HTTP_208_ALREADY_REPORTED
+            )
+
         friend_request.is_accepted = True
+        friend_request.save()
+
         reciever.friends.add(sender)
 
         return Response(
             {
                 "message": "Friend request accepted successfully"
-            }
+            },
+            status=status.HTTP_200_OK
         )
