@@ -1,7 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.humanize.templatetags.humanize import naturaltime
+
 from rest_framework import serializers
 
-from .models import User
+from .models import User, FriendshipRelationship
 
 from file_share.apps.notification.factory import NotificationFactory
 from file_share.apps.notification.models import Notification
@@ -65,3 +67,32 @@ class MiniUserSerializer(serializers.ModelSerializer):
             "username",
         ]
 
+
+class FriendRequestsSerializer(serializers.ModelSerializer):
+    sender = MiniUserSerializer(read_only=True)
+    reciever = MiniUserSerializer(read_only=True)
+    created = serializers.SerializerMethodField(read_only=True)
+    updated = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = FriendshipRelationship
+        fields = [
+            'id',
+            'sender',
+            'reciever',
+            'is_accepted',
+            'created',
+            'updated'
+        ]
+
+    def get_created(
+        self,
+        friendship_relationship: FriendshipRelationship
+    ):
+        return naturaltime(friendship_relationship.created)
+
+    def get_updated(
+        self,
+        friendship_relationship: FriendshipRelationship
+    ):
+        return naturaltime(friendship_relationship.updated)

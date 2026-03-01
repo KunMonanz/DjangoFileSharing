@@ -32,5 +32,10 @@ urlpatterns = [
         'friends/<uuid:friend_request_id>/accept/',
         AcceptFriendRequest.as_view(),
         name="accept-friend-request"
+    ),
+    path(
+        'friends/requests/',
+        GetAllFriendRequests.as_view(),
+        name="get-all-friend-requests"
     )
 ]

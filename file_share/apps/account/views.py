@@ -1,5 +1,7 @@
+from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+
 
 from rest_framework import exceptions, generics, permissions, status
 from rest_framework.response import Response
@@ -13,7 +15,8 @@ from .models import FriendshipRelationship
 from .serializers import (
     MyTokenObtainPairSerializer,
     UserRegisterSerializer,
-    MiniUserSerializer
+    MiniUserSerializer,
+    FriendRequestsSerializer,
 )
 
 User = get_user_model()
@@ -32,8 +35,7 @@ class GetAllFriendsView(generics.ListAPIView):
     serializer_class = MiniUserSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        return user.friends.all()
+        return self.request.user.friends.all().order_by('username')
 
 
 class SendFriendRequest(generics.CreateAPIView):
@@ -58,20 +60,19 @@ class SendFriendRequest(generics.CreateAPIView):
             )
 
         if friendship_created:
+            with transaction.atomic():
+                notification_factory = NotificationFactory()
 
-            notification_factory = NotificationFactory()
-
-            notification_factory.create_notification(
-                recipient=user,
-                message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_SENT,
-                activator=reciever
-            )
-
-            notification_factory.create_notification(
-                recipient=reciever,
-                message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED,
-                activator=user
-            )
+                notification_factory.create_notification(
+                    recipient=user,  # type: ignore
+                    message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_SENT,
+                    activator=reciever  # type: ignore
+                )
+                notification_factory.create_notification(
+                    recipient=reciever,  # type: ignore
+                    message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED,
+                    activator=user  # type: ignore
+                )
 
             return Response(
                 {
@@ -143,17 +144,18 @@ class AcceptFriendRequest(generics.UpdateAPIView):
                 status=status.HTTP_208_ALREADY_REPORTED
             )
 
-        friend_request.is_accepted = True
-        friend_request.save()
+        with transaction.atomic():
+            friend_request.is_accepted = True
+            friend_request.save()
 
-        notification_factory = NotificationFactory()
-        notification_factory.create_notification(
-            recipient=reciever,
-            message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED,
-            activator=user
-        )
+            notification_factory = NotificationFactory()
+            notification_factory.create_notification(
+                recipient=reciever,
+                message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED,
+                activator=user  # type: ignore
+            )
 
-        reciever.friends.add(sender)
+            reciever.friends.add(sender)
 
         return Response(
             {
@@ -161,3 +163,20 @@ class AcceptFriendRequest(generics.UpdateAPIView):
             },
             status=status.HTTP_200_OK
         )
+
+
+class GetAllFriendRequests(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FriendRequestsSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = FriendshipRelationship.objects\
+            .select_related('reciever', 'sender')\
+            .filter(sender=user)
+
+        unaccepted_only = self.request.query_params.get('is_accepted')
+        if unaccepted_only == 'true':
+            queryset.filter(is_accepted=False)
+
+        return queryset
