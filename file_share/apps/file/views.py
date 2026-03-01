@@ -2,10 +2,10 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError
 
 from rest_framework import generics, permissions, exceptions
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.throttling import ScopedRateThrottle
 
 from .models import File, FileShare
 
@@ -15,13 +15,14 @@ from .serializers import (
     FileShareSerializer
 )
 
-
 User = get_user_model()
 
 
 class UploadFileCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FileUploadSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'sensitive_action'
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
@@ -115,7 +116,7 @@ class SharedFilesListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FileSerializer
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore
         return (
             File.objects
             .filter(shares__shared_to=self.request.user)
@@ -145,7 +146,7 @@ class DownloadFileView(generics.RetrieveAPIView):
     lookup_field = "id"
     lookup_url_kwarg = "file_id"
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore
         return (
             File.objects
             .select_related("owner")

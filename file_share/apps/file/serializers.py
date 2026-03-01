@@ -1,7 +1,9 @@
 import filetype
 import mimetypes
+
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
+from django.contrib.humanize.templatetags.humanize import naturaltime
 
 from rest_framework import serializers
 from .models import File, FileShare
@@ -23,6 +25,7 @@ def human_readable_size(size: int):
 
 class FileUploadSerializer(serializers.ModelSerializer):
     size = serializers.SerializerMethodField(read_only=True)
+    uploaded_at = serializers.SerializerMethodField()
 
     class Meta:
         model = File
@@ -73,10 +76,13 @@ class FileUploadSerializer(serializers.ModelSerializer):
     def get_size(self, file: File):
         return human_readable_size(file.file.size)
 
+    def get_uploaded_at(self, file: File):
+        return naturaltime(file.uploaded_at)
 
 class FileSerializer(serializers.ModelSerializer):
     owner = MiniUserSerializer(read_only=True)
     size = serializers.SerializerMethodField(read_only=True)
+    uploaded_at = serializers.SerializerMethodField()
 
     class Meta:
         model = File
@@ -98,6 +104,8 @@ class FileSerializer(serializers.ModelSerializer):
     def get_size(self, file: File):
         return human_readable_size(file.file.size)
 
+    def get_uploaded_at(self, file: File):
+        return naturaltime(file.uploaded_at)
 
 class MiniFileSerializer(serializers.ModelSerializer):
     owner = MiniUserSerializer(read_only=True)
@@ -125,6 +133,7 @@ class MiniFileSerializer(serializers.ModelSerializer):
 
 class FileShareSerializer(serializers.ModelSerializer):
     file = MiniFileSerializer()
+    shared_at = serializers.SerializerMethodField()
 
     class Meta:
         model = FileShare
@@ -134,6 +143,9 @@ class FileShareSerializer(serializers.ModelSerializer):
             'shared_to',
             'file',
             'shared_at',
-            'comment'
+            'comment',
         ]
         read_only_fields = ['id', 'shared_by', 'shared_at']
+
+    def get_shared_at(self, file_share: FileShare):
+        return naturaltime(file_share.shared_at)

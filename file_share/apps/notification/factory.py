@@ -1,7 +1,5 @@
-from django.contrib.auth import get_user_model
 from .models import Notification
-
-User = get_user_model()
+from file_share.apps.account.models import User
 
 
 class NotificationFactory:
@@ -12,7 +10,13 @@ class NotificationFactory:
         Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED: lambda r, a: f"Friend request from {a.username}"
     }
 
-    def create_notification(self, recipient, message_type, activator=None):
+    def create_notification(
+        self,
+        recipient: User,
+        message_type: Notification.NotificationType,
+        activator: User | None = None
+    ) -> Notification:
+
         if message_type in [
             Notification.NotificationType.FRIENDSHIP_REQUEST_SENT,
             Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED,
