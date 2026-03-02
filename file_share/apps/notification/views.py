@@ -20,8 +20,9 @@ class NotificationListView(generics.ListAPIView):
         )
 
         try:
-            queryset = Notification.objects.select_related(
-                'user').filter(user=user)
+            queryset = Notification.objects\
+                .select_related('user')\
+                .filter(user=user)
 
             if unread_only == 'true':
                 queryset = queryset.filter(is_read=False)
@@ -41,14 +42,16 @@ class RetrieveNotification(generics.RetrieveAPIView):
     lookup_url_kwarg = 'notification_id'
 
     def get_queryset(self):
-        return Notification.objects.select_related('user').filter(user=self.request.user)
+        return Notification.objects.select_related('user')\
+            .filter(user=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         user = request.user
         notification_id = kwargs.get('notification_id')
 
         logger.info(
-            f"Attempting to fetch notification {notification_id} for user_id={user.id}")
+            f"Attempting to fetch notification {notification_id} for user_id={user.id}"
+        )
 
         try:
             instance = self.get_object()
