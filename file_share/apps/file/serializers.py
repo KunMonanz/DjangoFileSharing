@@ -82,7 +82,7 @@ class FileUploadSerializer(serializers.ModelSerializer):
 class FileSerializer(serializers.ModelSerializer):
     owner = MiniUserSerializer(read_only=True)
     size = serializers.SerializerMethodField(read_only=True)
-    uploaded_at = serializers.SerializerMethodField()
+    uploaded_at = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = File
