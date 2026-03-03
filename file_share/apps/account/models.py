@@ -28,9 +28,9 @@ class FriendshipRelationship(models.Model):
         related_name="friendship_sender",
         on_delete=models.CASCADE
     )
-    reciever = models.ForeignKey(
+    receiver = models.ForeignKey(
         User,
-        related_name="friendship_reciever",
+        related_name="friendship_receiver",
         on_delete=models.CASCADE
     )
     is_accepted = models.BooleanField(default=False)

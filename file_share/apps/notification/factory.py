@@ -7,7 +7,7 @@ class NotificationFactory:
         Notification.NotificationType.USER_REGISTRATION: lambda r, a: f"Dear {r.username}, Welcome to Django File Share, we are glad to meet you.",
         Notification.NotificationType.FRIENDSHIP_REQUEST_SENT: lambda r, a: f"Friend request sent to {a.username}.",
         Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED: lambda r, a: f"Friend request from {a.username} has been accepted.",
-        Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED: lambda r, a: f"Friend request from {a.username}"
+        Notification.NotificationType.FRIENDSHIP_REQUEST_RECEIVED: lambda r, a: f"Friend request from {a.username}"
     }
 
     def create_notification(
@@ -20,7 +20,7 @@ class NotificationFactory:
         if message_type in [
             Notification.NotificationType.FRIENDSHIP_REQUEST_SENT,
             Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED,
-            Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED
+            Notification.NotificationType.FRIENDSHIP_REQUEST_RECEIVED
         ] and activator is None:
             raise ValueError(
                 f"An activator is required for message type: {message_type}")

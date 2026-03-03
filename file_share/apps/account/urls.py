@@ -19,14 +19,14 @@ urlpatterns = [
         name="get-all-friends"
     ),
     path(
-        'friends/<uuid:reciever_id>/request/',
+        'friends/<uuid:receiver_id>/request/',
         SendFriendRequest.as_view(),
         name="send-friend-request"
     ),
     path(
-        'friends/<uuid:reciever_id>/delete/',
+        'friends/<uuid:receiver_id>/delete/',
         RemoveFriendRequest.as_view(),
-        name="delet-friend-request"
+        name="delete-friend-request"
     ),
     path(
         'friends/<uuid:friend_request_id>/accept/',
@@ -35,7 +35,7 @@ urlpatterns = [
     ),
     path(
         'friends/requests/',
-        GetAllRecievedFriendRequests.as_view(),
+        GetAllReceivedFriendRequests.as_view(),
         name="get-all-friend-requests"
     ),
     path(

@@ -1,13 +1,15 @@
+import logging
+
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-
 
 from rest_framework import exceptions, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from file_share.apps.notification.factory import NotificationFactory
+
 from file_share.apps.notification.models import Notification
 
 from .models import FriendshipRelationship
@@ -21,6 +23,8 @@ from .serializers import (
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
@@ -28,6 +32,19 @@ class MyTokenObtainPairView(TokenObtainPairView):
 class RegisterUserView(generics.CreateAPIView):
     serializer_class = UserRegisterSerializer
     permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            logger.info(
+                "START: Registering new user"
+            )
+            response = super().post(request, *args, **kwargs)
+            return response
+        except Exception as e:
+            logger.exception(
+                "CRITICAL: Database error in creating user"
+            )
+            raise e
 
 
 class GetAllFriendsView(generics.ListAPIView):
@@ -44,15 +61,15 @@ class SendFriendRequest(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         user = self.request.user
 
-        reciever_id = self.kwargs.get("reciever_id")
-        reciever = get_object_or_404(User, id=reciever_id)
+        receiver_id = self.kwargs.get("receiver_id")
+        receiver = get_object_or_404(User, id=receiver_id)
 
         friendship_created = FriendshipRelationship.objects.create(
             sender=user,
-            reciever=reciever
+            receiver=receiver
         )
 
-        if reciever == user:
+        if receiver == user:
             return Response({
                 "error": "Cannot send a friend request to yourself"
             },
@@ -66,11 +83,11 @@ class SendFriendRequest(generics.CreateAPIView):
                 notification_factory.create_notification(
                     recipient=user,  # type: ignore
                     message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_SENT,
-                    activator=reciever  # type: ignore
+                    activator=receiver  # type: ignore
                 )
                 notification_factory.create_notification(
-                    recipient=reciever,  # type: ignore
-                    message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_RECIEVED,
+                    recipient=receiver,  # type: ignore
+                    message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_RECEIVED,
                     activator=user  # type: ignore
                 )
 
@@ -95,13 +112,13 @@ class RemoveFriendRequest(generics.DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         user = self.request.user
 
-        reciever_id = self.kwargs.get("reciever_id")
-        reciever = get_object_or_404(User, id=reciever_id)
+        receiver_id = self.kwargs.get("receiver_id")
+        receiver = get_object_or_404(User, id=receiver_id)
 
         friendship_request_exists = get_object_or_404(
             FriendshipRelationship,
             sender=user,
-            reciever=reciever
+            receiver=receiver
         )
 
         if friendship_request_exists:
@@ -129,9 +146,9 @@ class AcceptFriendRequest(generics.UpdateAPIView):
         )
 
         sender = friend_request.sender
-        reciever = friend_request.reciever
+        receiver = friend_request.receiver
 
-        if reciever != user:
+        if receiver != user:
             raise exceptions.PermissionDenied(
                 "You are unauthorized!"
             )
@@ -150,12 +167,12 @@ class AcceptFriendRequest(generics.UpdateAPIView):
 
             notification_factory = NotificationFactory()
             notification_factory.create_notification(
-                recipient=reciever,
+                recipient=receiver,
                 message_type=Notification.NotificationType.FRIENDSHIP_REQUEST_ACCEPTED,
                 activator=user  # type: ignore
             )
 
-            reciever.friends.add(sender)
+            receiver.friends.add(sender)
 
         return Response(
             {
@@ -165,7 +182,7 @@ class AcceptFriendRequest(generics.UpdateAPIView):
         )
 
 
-class GetAllRecievedFriendRequests(generics.ListAPIView):
+class GetAllReceivedFriendRequests(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FriendRequestsSerializer
 
@@ -173,8 +190,8 @@ class GetAllRecievedFriendRequests(generics.ListAPIView):
         user = self.request.user
 
         queryset = FriendshipRelationship.objects\
-            .select_related('reciever', 'sender')\
-            .filter(reciever=user)
+            .select_related('receiver', 'sender')\
+            .filter(receiver=user)
 
         pending = self.request.query_params.get('pending')  # type: ignore
         if pending == 'true':
@@ -191,7 +208,7 @@ class GetAllSentFriendRequests(generics.ListAPIView):
         user = self.request.user
 
         queryset = FriendshipRelationship.objects\
-            .select_related('reciever', 'sender')\
+            .select_related('receiver', 'sender')\
             .filter(sender=user)
 
         pending = self.request.query_params.get('pending')

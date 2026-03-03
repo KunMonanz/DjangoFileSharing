@@ -96,7 +96,6 @@ class ShareFileCreateView(generics.CreateAPIView):
 
         if not user.friends.filter(id=shared_to_user).exists():  # type: ignore
             logger.warning(
-                # type: ignore
                 f"LOGIC: User={user.id} tried sharing file={file.id} with non-friend user={shared_to_user.id}"
             )
             raise exceptions.PermissionDenied(
