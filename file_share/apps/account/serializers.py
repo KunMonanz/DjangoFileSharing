@@ -3,7 +3,7 @@ from django.contrib.humanize.templatetags.humanize import naturaltime
 
 from rest_framework import serializers
 
-from .models import User, FriendshipRelationship
+from .models import User, FriendshipRequest
 
 from file_share.apps.notification.factory import NotificationFactory
 from file_share.apps.notification.models import Notification
@@ -75,7 +75,7 @@ class FriendRequestsSerializer(serializers.ModelSerializer):
     updated = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = FriendshipRelationship
+        model = FriendshipRequest
         fields = [
             'id',
             'sender',
@@ -87,12 +87,12 @@ class FriendRequestsSerializer(serializers.ModelSerializer):
 
     def get_created(
         self,
-        friendship_relationship: FriendshipRelationship
+        friendship_relationship: FriendshipRequest
     ):
         return naturaltime(friendship_relationship.created)
 
     def get_updated(
         self,
-        friendship_relationship: FriendshipRelationship
+        friendship_relationship: FriendshipRequest
     ):
         return naturaltime(friendship_relationship.updated)

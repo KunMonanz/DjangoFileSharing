@@ -11,7 +11,7 @@ class Notification(models.Model):
         USER_REGISTRATION = 'USR', 'User Registration'
         FRIENDSHIP_REQUEST_SENT = 'FRS', 'Friendship request sent'
         FRIENDSHIP_REQUEST_ACCEPTED = 'FRA', 'Friendship request accepted'
-        FRIENDSHIP_REQUEST_RECEIVED = 'FRR', 'Friendship request recieved'
+        FRIENDSHIP_REQUEST_RECEIVED = 'FRR', 'Friendship request received'
         OTHER = 'OTH', 'Other'
 
     id = models.UUIDField(

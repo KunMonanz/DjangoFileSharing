@@ -17,7 +17,12 @@ class User(AbstractUser):
     )
 
 
-class FriendshipRelationship(models.Model):
+class FriendshipRequest(models.Model):
+
+    class Status(models.TextChoices):
+        PENDING = "pending"
+        ACCEPTED = "accepted"
+
     id = models.UUIDField(
         primary_key=True,
         editable=False,
@@ -33,6 +38,15 @@ class FriendshipRelationship(models.Model):
         related_name="friendship_receiver",
         on_delete=models.CASCADE
     )
-    is_accepted = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.PENDING)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["sender", "receiver"],
+                name="unique_friend_request"
+            )
+        ]
