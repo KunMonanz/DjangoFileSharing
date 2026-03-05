@@ -178,14 +178,19 @@ class RemoveFriendRequest(generics.DestroyAPIView):
             f"START: Removing a friend request to user={user.id} sent by {receiver.id}"
         )
 
-        friendship_request_exists = FriendshipRequest.objects.filter(
-            sender=user, receiver=receiver
-        ).first() or FriendshipRequest.objects.filter(
-            sender=receiver, receiver=user
-        ).first()
+        friendship_request_exists = \
+            FriendshipRequest.objects.filter(
+                sender=user,
+                receiver=receiver
+            ).first()\
+            or\
+            FriendshipRequest.objects.filter(
+                sender=receiver,
+                receiver=user
+            ).first()
 
         if not friendship_request_exists:
-            return Response({"error": "No request found"}, status=404)
+            return Response({"error": "No friendship request found"}, status=404)
 
         try:
             friendship_request_id = friendship_request_exists.id
@@ -296,12 +301,6 @@ class GetAllReceivedFriendRequests(generics.ListAPIView):
             .select_related('receiver', 'sender')\
             .filter(receiver=user)
 
-        pending = self.request.query_params.get('pending')  # type: ignore
-        if pending == 'true':
-            queryset = queryset.filter(
-                status=FriendshipRequest.Status.PENDING
-            )
-
         return queryset.order_by('-created')
 
     def list(self, request, *args, **kwargs):
@@ -337,12 +336,6 @@ class GetAllSentFriendRequests(generics.ListAPIView):
         queryset = FriendshipRequest.objects\
             .select_related('receiver', 'sender')\
             .filter(sender=user)
-
-        pending = self.request.query_params.get('pending')
-        if pending == 'true':
-            queryset = queryset.filter(
-                status=FriendshipRequest.Status.PENDING
-            )
 
         return queryset.order_by('-created')
 

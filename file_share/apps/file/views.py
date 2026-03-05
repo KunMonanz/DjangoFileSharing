@@ -35,13 +35,6 @@ class UploadFileCreateView(generics.CreateAPIView):
         user = self.request.user
         uploaded_file = self.request.FILES.get('file')
 
-        if not uploaded_file:
-            logger.warning(
-                f"Upload attempt with missing file by user_id={user.id}")  # type: ignore
-            raise exceptions.ValidationError(
-                "File must be included for upload"
-            )
-
         logger.info(
             f"User {user.id} starting upload: {uploaded_file.name} "
             f"({uploaded_file.size} bytes, {uploaded_file.content_type})"
